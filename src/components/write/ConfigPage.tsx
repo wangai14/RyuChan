@@ -6,7 +6,7 @@ import { readTextFileFromRepo, putFile } from '@/lib/github-client'
 import { toBase64Utf8 } from '@/lib/github-client'
 import yaml from 'js-yaml'
 import { useAuthStore } from './hooks/use-auth'
-import { readFileAsText } from '@/lib/file-utils'
+import { readFileAsText, fileToBase64NoPrefix } from '@/lib/file-utils'
 
 // Common social icons mapping
 const SOCIAL_PRESETS = [
@@ -32,6 +32,11 @@ export function ConfigPage() {
     const [parsedConfig, setParsedConfig] = useState<any>(null)
     const { isAuth, setPrivateKey } = useAuthStore()
     const keyInputRef = useRef<HTMLInputElement>(null)
+    
+    // Image upload state
+    const [uploadingImage, setUploadingImage] = useState(false)
+    const [uploadTarget, setUploadTarget] = useState<string>('')
+    const imageInputRef = useRef<HTMLInputElement>(null)
 
 	useEffect(() => {
 		loadConfig()
@@ -167,6 +172,48 @@ export function ConfigPage() {
 		}
 	}
 
+    const triggerImageUpload = (target: string) => {
+        setUploadTarget(target)
+        imageInputRef.current?.click()
+    }
+
+    const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !uploadTarget) return
+
+        try {
+            setUploadingImage(true)
+            const token = await getAuthToken()
+            if (!token) throw new Error('未授权')
+
+            const base64 = await fileToBase64NoPrefix(file)
+            const ext = file.name.split('.').pop() || 'png'
+            const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+            const path = `public/images/uploads/${filename}`
+            
+            await putFile(
+                token,
+                GITHUB_CONFIG.OWNER,
+                GITHUB_CONFIG.REPO,
+                path,
+                base64,
+                `upload: ${filename}`,
+                GITHUB_CONFIG.BRANCH
+            )
+
+            const publicPath = `/images/uploads/${filename}`
+            updateConfigValue(uploadTarget, publicPath)
+            toast.success('图片上传成功')
+        } catch (error: any) {
+            console.error(error)
+            toast.error('图片上传失败: ' + error.message)
+        } finally {
+            setUploadingImage(false)
+            setUploadTarget('')
+            if (imageInputRef.current) imageInputRef.current.value = ''
+        }
+    }
+
     const handleImportKey = () => {
         keyInputRef.current?.click()
     }
@@ -196,6 +243,14 @@ export function ConfigPage() {
 					if (e.currentTarget) e.currentTarget.value = ''
 				}}
 			/>
+
+            <input
+                ref={imageInputRef}
+                type='file'
+                accept='image/*'
+                className='hidden'
+                onChange={handleImageSelect}
+            />
 
 			<div className="rounded-3xl bg-base-100 shadow-2xl flex flex-col overflow-hidden border border-base-200 min-h-[600px]">
 				{/* Header */}
@@ -264,6 +319,16 @@ export function ConfigPage() {
                                             <div className="w-24 h-24 rounded-2xl overflow-hidden bg-base-200 ring-4 ring-base-100 shadow-xl group-hover:scale-105 transition-transform duration-300">
                                                 <img src={parsedConfig?.site?.favicon || '/favicon.ico'} alt="Favicon" className="w-full h-full object-cover" />
                                             </div>
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/50 backdrop-blur-sm rounded-3xl cursor-pointer" onClick={() => triggerImageUpload('site.favicon')}>
+                                                <button className="btn btn-circle btn-primary shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                                </button>
+                                            </div>
+                                            {uploadingImage && uploadTarget === 'site.favicon' && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-base-100/80 rounded-3xl z-10">
+                                                    <span className="loading loading-spinner loading-md text-primary"></span>
+                                                </div>
+                                            )}
                                         </div>
                                         <input 
                                             type="text" 
@@ -279,6 +344,16 @@ export function ConfigPage() {
                                             <div className="w-24 h-24 rounded-2xl overflow-hidden bg-base-200 ring-4 ring-base-100 shadow-xl group-hover:scale-105 transition-transform duration-300">
                                                 <img src={parsedConfig?.user?.avatar || '/avatar.png'} alt="Avatar" className="w-full h-full object-cover" />
                                             </div>
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/50 backdrop-blur-sm rounded-3xl cursor-pointer" onClick={() => triggerImageUpload('user.avatar')}>
+                                                <button className="btn btn-circle btn-primary shadow-lg scale-90 group-hover:scale-100 transition-transform">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                                </button>
+                                            </div>
+                                            {uploadingImage && uploadTarget === 'user.avatar' && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-base-100/80 rounded-3xl z-10">
+                                                    <span className="loading loading-spinner loading-md text-primary"></span>
+                                                </div>
+                                            )}
                                         </div>
                                         <input 
                                             type="text" 

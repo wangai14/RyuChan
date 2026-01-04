@@ -133,6 +133,7 @@ let animeList = animeData.flatMap((group) => group.items || []).map(anime => {
     originalTitle: originalTitle,
     poster: anime.poster_path ? TMDB_IMG + anime.poster_path : null,
     type: type,
+    source: 'tmdb',
     rating: anime.vote_average || 0,
     date: date,
     overview: anime.overview,
@@ -148,10 +149,12 @@ if (bilibiliItems.length > 0) {
     originalTitle: item.title,
     poster: item.cover ? item.cover.replace('http://', 'https://') : null,
     type: 'tv',
+    source: 'bilibili',
     rating: 0,
     date: '', 
     overview: item.evaluate || item.brief || "暂无简介",
-    link: `https://www.bilibili.com/bangumi/play/ss${item.season_id}`
+    link: `https://www.bilibili.com/bangumi/play/ss${item.season_id}`,
+    epStatus: item.new_ep?.index_show || ''
   }));
   animeList = [...animeList, ...bilibiliMapped];
 }
@@ -265,15 +268,17 @@ const averageRating = (animeList.reduce((sum, a) => sum + (Number(a.rating) || 0
                   </div>
                 )}
                 
-                <!-- 评分角标 -->
-                <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-yellow-400 px-2 py-1 rounded-xl flex items-center gap-1 text-xs font-bold shadow-lg">
-                  <Icon name="lucide:star" class="w-3 h-3 fill-current" />
-                  <span>{anime.rating.toFixed(1)}</span>
-                </div>
+                {/* 评分角标 - 仅在有评分时显示 */}
+                {anime.rating > 0 && (
+                  <div class="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-yellow-400 px-2 py-1 rounded-xl flex items-center gap-1 text-xs font-bold shadow-lg">
+                    <Icon name="lucide:star" class="w-3 h-3 fill-current" />
+                    <span>{anime.rating.toFixed(1)}</span>
+                  </div>
+                )}
 
-                <!-- 类型角标 -->
-                <div class="absolute top-2 left-2 bg-primary/80 backdrop-blur-sm text-primary-content px-2 py-1 rounded-xl text-xs font-bold shadow-lg">
-                  {anime.type === 'movie' ? '剧场版' : 'TV'}
+                {/* 类型角标 - Bilibili 使用特定颜色 */}
+                <div class={`absolute top-2 left-2 backdrop-blur-sm text-white px-2 py-1 rounded-xl text-xs font-bold shadow-lg ${anime.source === 'bilibili' ? 'bg-[#23ade5]/90' : 'bg-primary/80'}`}>
+                  {anime.source === 'bilibili' ? 'Bilibili' : (anime.type === 'movie' ? '剧场版' : 'TV')}
                 </div>
 
                 <!-- 悬停遮罩 -->
@@ -295,8 +300,17 @@ const averageRating = (animeList.reduce((sum, a) => sum + (Number(a.rating) || 0
                 </h2>
                 <div class="flex items-center justify-between mt-auto text-xs text-base-content/60">
                   <span class="flex items-center gap-1">
-                    <Icon name="lucide:calendar" class="w-3 h-3" />
-                    {anime.date ? anime.date.split('-')[0] : '未知'}
+                    {anime.source === 'bilibili' && anime.epStatus ? (
+                      <>
+                        <Icon name="lucide:play-circle" class="w-3 h-3" />
+                        {anime.epStatus}
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="lucide:calendar" class="w-3 h-3" />
+                        {anime.date ? anime.date.split('-')[0] : '未知'}
+                      </>
+                    )}
                   </span>
                   <span class="flex items-center gap-1">
                     <Icon name="lucide:heart" class="w-3 h-3" />
