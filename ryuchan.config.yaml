@@ -57,6 +57,11 @@ site:
       href: / # 菜单项链接的地址
       svg: "material-symbols:home-outline-rounded"
       target: _self
+    - id: write
+      text: 写作
+      href: /write
+      svg: "material-symbols:edit-square-outline-rounded"
+      target: _self
     - id: navigation  
       text: 导航  
       href: /navigation  

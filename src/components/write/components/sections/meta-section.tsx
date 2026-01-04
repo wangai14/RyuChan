@@ -29,26 +29,26 @@ export function MetaSection({ delay = 0, categories = [] }: MetaSectionProps) {
 				<TagInput tags={form.tags} onChange={tags => updateForm({ tags })} />
                 
                 <div className="text-xs font-medium text-base-content/70">分类</div>
-                {categories.length > 0 && !isCustomCategory ? (
-                    <select 
-                        className="select select-bordered w-full bg-base-100 focus:select-primary text-sm"
-                        value={categories.includes(form.categories[0]) ? form.categories[0] : ''}
-                        onChange={e => {
-                            const val = e.target.value
-                            if (val === '__custom__') {
-                                setIsCustomCategory(true)
-                            } else {
-                                updateForm({ categories: [val] })
-                            }
-                        }}
-                    >
-                        <option value="" disabled>选择分类...</option>
-                        {categories.map(c => (
-                            <option key={c} value={c}>{c}</option>
-                        ))}
-                        <option value="__custom__">+ 自定义/多选...</option>
-                    </select>
-                ) : (
+				{categories.length > 0 && !isCustomCategory ? (
+					<select 
+						className="select select-bordered w-full bg-base-100 focus:select-primary text-sm transition-colors hover:border-primary focus:border-primary"
+						value={categories.includes(form.categories[0]) ? form.categories[0] : ''}
+						onChange={e => {
+							const val = e.target.value
+							if (val === '__custom__') {
+								setIsCustomCategory(true)
+							} else {
+								updateForm({ categories: [val] })
+							}
+						}}
+					>
+						<option value="" disabled>选择分类...</option>
+						{categories.map(c => (
+							<option key={c} value={c}>{c}</option>
+						))}
+						<option value="__custom__">+ 自定义/多选...</option>
+					</select>
+				) : (
                     <div className="space-y-1">
                         <TagInput tags={form.categories} onChange={categories => updateForm({ categories })} />
                         {categories.length > 0 && (

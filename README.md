@@ -224,7 +224,58 @@ zh: # 中文翻译
 1. 在 `translations.yaml` 文件中添加新的语言代码和对应翻译，或修改现有翻译
 2. 在 `ryuchan.config.yaml` 中更改 `site.language` 为你要使用的语言代码
 
-## 🚀 自动更新
+## � 在线写作配置 (GitHub App)
+
+Ryuchan 支持直接在博客后台在线编辑和发布文章。为了实现这一功能，你需要创建一个 GitHub App 并进行配置。
+
+### 1. 创建 GitHub App
+
+1.  登录 GitHub，进入 [Developer Settings > GitHub Apps](https://github.com/settings/apps)。
+2.  点击 **New GitHub App**。
+3.  填写以下信息：
+    *   **GitHub App name**: 起一个名字（例如 `Ryuchan-Writer`）。
+    *   **Homepage URL**: 你的博客地址（例如 `https://your-blog.com`）。
+    *   **Callback URL**: `https://your-blog.com/write` (这一步很重要，用于 OAuth 回调)。
+    *   取消勾选 **Expire user authorization tokens**。
+    *   取消勾选 **Request user authorization (OAuth) during installation**。
+    *   **Webhook**: 取消勾选 **Active**（我们不需要 Webhook）。
+
+### 2. 设置权限 (Permissions)
+
+在 **Repository permissions** 中设置：
+
+*   **Contents**: 选择 `Read and write` (用于读取和保存文章)。
+*   **Metadata**: 选择 `Read-only` (默认必选)。
+
+### 3. 生成私钥 (Private Key)
+
+1.  创建 App 后，滚动到底部。
+2.  点击 **Generate a private key**。
+3.  这将下载一个 `.pem` 文件。**请妥善保管此文件**，稍后在博客配置页需要导入它。
+
+### 4. 安装 App
+
+1.  在 App 设置页面的左侧菜单，点击 **Install App**。
+2.  选择你的博客所在的账号或组织，点击 **Install**。
+3.  选择 **Only select repositories**，并选择你的博客仓库（例如 `your-name/Ryuchan`）。
+4.  点击 **Install**。
+
+### 5. 获取配置信息
+
+回到 App 的 **General** 设置页面，记录以下信息：
+
+*   **App ID**: 页面顶部的 `App ID`。
+*   **Client ID**: 页面顶部的 `Client ID`。
+
+### 6. 配置博客
+
+1.  打开你的博客，访问 `/config` 页面（或者点击右上角的设置图标）。
+2.  在配置页中，点击 **导入密钥 (.pem)**，选择刚才下载的 `.pem` 文件。
+3.  确保 `ryuchan.config.yaml` 中的仓库信息正确。
+
+现在，你就可以访问 `/write` 页面开始在线写作了！
+
+## �🚀 自动更新
 
 你可以使用我们提供的更新脚本保持项目与 Ryuchan 的最新版本同步：
 
