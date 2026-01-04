@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { toast, Toaster } from 'sonner'
 import { getAuthToken } from '@/lib/auth'
 import { GITHUB_CONFIG } from '@/consts'
 import { readTextFileFromRepo, putFile } from '@/lib/github-client'
 import { toBase64Utf8 } from '@/lib/github-client'
 import yaml from 'js-yaml'
+import { useAuthStore } from './hooks/use-auth'
+import { readFileAsText } from '@/lib/file-utils'
 
 // Common social icons mapping
 const SOCIAL_PRESETS = [
@@ -25,10 +27,12 @@ export function ConfigPage() {
 	const [saving, setSaving] = useState(false)
     const [mode, setMode] = useState<'visual' | 'code'>('visual')
     const [parsedConfig, setParsedConfig] = useState<any>(null)
+    const { isAuth, setPrivateKey } = useAuthStore()
+    const keyInputRef = useRef<HTMLInputElement>(null)
 
 	useEffect(() => {
 		loadConfig()
-	}, [])
+	}, [isAuth])
 
     useEffect(() => {
         if (configContent && mode === 'visual') {
@@ -47,6 +51,11 @@ export function ConfigPage() {
 		try {
 			setLoading(true)
 			const token = await getAuthToken()
+            if (!token) {
+                // Not authenticated, don't try to load
+                setLoading(false)
+                return
+            }
 			const content = await readTextFileFromRepo(
 				token,
 				GITHUB_CONFIG.OWNER,
@@ -155,22 +164,55 @@ export function ConfigPage() {
 		}
 	}
 
+    const handleImportKey = () => {
+        keyInputRef.current?.click()
+    }
+
+    const onChoosePrivateKey = async (file: File) => {
+        try {
+            const pem = await readFileAsText(file)
+            await setPrivateKey(pem)
+            toast.success('密钥导入成功')
+        } catch (e) {
+            toast.error('密钥导入失败')
+        }
+    }
+
 	return (
-		<div className="min-h-screen bg-base-100 pt-24 pb-12">
+		<div className="w-full max-w-4xl mx-auto my-12">
             <Toaster richColors position="top-center" />
-			<div className="w-full max-w-4xl mx-auto rounded-2xl bg-white shadow-xl dark:bg-zinc-900 flex flex-col overflow-hidden border border-zinc-100 dark:border-zinc-800">
+            
+            <input
+				ref={keyInputRef}
+				type='file'
+				accept='.pem'
+				className='hidden'
+				onChange={async e => {
+					const f = e.target.files?.[0]
+					if (f) await onChoosePrivateKey(f)
+					if (e.currentTarget) e.currentTarget.value = ''
+				}}
+			/>
+
+			<div className="rounded-2xl bg-white shadow-xl dark:bg-zinc-900 flex flex-col overflow-hidden border border-zinc-100 dark:border-zinc-800 min-h-[600px]">
 				{/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
                     <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">站点配置</h2>
                     
                     <div className="flex items-center gap-3">
+                        {!isAuth && (
+                            <button onClick={handleImportKey} className="btn btn-sm btn-outline">
+                                导入密钥
+                            </button>
+                        )}
                         <button 
                             className={`btn btn-sm ${mode === 'visual' ? 'btn-ghost text-zinc-500' : 'btn-primary'}`}
                             onClick={() => setMode(mode === 'visual' ? 'code' : 'visual')}
+                            disabled={!isAuth}
                         >
                             {mode === 'visual' ? '预览' : '可视化'}
                         </button>
-                        <button onClick={handleSave} disabled={saving || loading} className="btn btn-sm bg-red-500 hover:bg-red-600 text-white border-none px-6">
+                        <button onClick={handleSave} disabled={saving || loading || !isAuth} className="btn btn-sm bg-red-500 hover:bg-red-600 text-white border-none px-6">
                             {saving ? '保存中...' : '保存配置'}
                         </button>
                     </div>
@@ -178,7 +220,14 @@ export function ConfigPage() {
 
 				{loading ? (
 					<div className="flex h-64 items-center justify-center">加载中...</div>
-				) : (
+				) : !isAuth ? (
+                    <div className="flex flex-col items-center justify-center h-full flex-1 p-12 text-center space-y-4">
+                        <div className="text-zinc-400 text-lg">请先导入密钥以编辑配置</div>
+                        <button onClick={handleImportKey} className="btn btn-primary">
+                            导入密钥 (.pem)
+                        </button>
+                    </div>
+                ) : (
                     <div className="flex-1 overflow-y-auto bg-zinc-50/50 dark:bg-zinc-950/50 p-6">
                         {mode === 'code' ? (
                             <textarea
@@ -194,7 +243,7 @@ export function ConfigPage() {
                                     <div className="space-y-3">
                                         <div className="text-sm text-zinc-500">网站图标</div>
                                         <div className="flex justify-center p-6 bg-white rounded-2xl border border-zinc-100 shadow-sm">
-                                            <div className="w-24 h-24 rounded-full overflow-hidden bg-zinc-100 ring-4 ring-white shadow-lg">
+                                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-zinc-100 ring-4 ring-white shadow-lg">
                                                 <img src={parsedConfig?.site?.favicon || '/favicon.ico'} alt="Favicon" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
@@ -209,7 +258,7 @@ export function ConfigPage() {
                                     <div className="space-y-3">
                                         <div className="text-sm text-zinc-500">阿凡达 (Avatar)</div>
                                         <div className="flex justify-center p-6 bg-white rounded-2xl border border-zinc-100 shadow-sm">
-                                            <div className="w-24 h-24 rounded-full overflow-hidden bg-zinc-100 ring-4 ring-white shadow-lg">
+                                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-zinc-100 ring-4 ring-white shadow-lg">
                                                 <img src={parsedConfig?.user?.avatar || '/avatar.png'} alt="Avatar" className="w-full h-full object-cover" />
                                             </div>
                                         </div>
