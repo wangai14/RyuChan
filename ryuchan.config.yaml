@@ -104,10 +104,10 @@ user:
         ariaLabel: BiliBili
         title: BiliBili
         svg: ri:bilibili-line
-      - href: xzz__ya
-        ariaLabel: WeChat
-        title: WeChat
-        svg: ri:wechat-line
+      - href: https://x.com/xzz_ya
+        ariaLabel: Twitter (X)
+        title: Twitter (X)
+        svg: ri:twitter-line
       - href: https://demo.131714.xyz/rss.xml
         ariaLabel: Subscribe via Folo
         title: RSS
