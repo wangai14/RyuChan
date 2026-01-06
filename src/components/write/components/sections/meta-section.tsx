@@ -77,6 +77,14 @@ export function MetaSection({ delay = 0, categories = [] }: MetaSectionProps) {
 					}}
 				/>
 
+				<input
+					type='text'
+					placeholder='Badge (输入 Pin 以置顶)'
+					className='input input-bordered w-full bg-base-100 focus:input-primary text-sm'
+					value={form.badge || ''}
+					onChange={e => updateForm({ badge: e.target.value })}
+				/>
+
 				<div className='flex items-center gap-2 pt-1'>
 					<input
 						type='checkbox'

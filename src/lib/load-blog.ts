@@ -58,7 +58,8 @@ export async function loadBlog(slug: string): Promise<{ form: PublishForm, cover
         date: data.pubDate ? dayjs(data.pubDate).format('YYYY-MM-DDTHH:mm') : '',
         summary: data.description || '',
         hidden: data.draft || false,
-        categories: data.categories || []
+        categories: data.categories || [],
+        badge: data.badge || ''
     }
 
     return { form, cover: data.image }

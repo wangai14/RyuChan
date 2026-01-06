@@ -44,6 +44,7 @@ const initialForm: PublishForm = {
 	tags: [],
 	date: formatDateTimeLocal(),
 	summary: '',
+    badge: '',
 	hidden: false,
 	categories: []
 }

@@ -100,7 +100,8 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
             image: coverPath,
             draft: form.hidden,
             tags: form.tags,
-            categories: form.categories
+            categories: form.categories,
+            badge: form.badge
         }
         const finalContent = stringifyFrontmatter(frontmatter, mdToUpload)
 
