@@ -57,7 +57,9 @@ export function ConfigPage() {
     const [pendingImages, setPendingImages] = useState<Record<string, { file: File, previewUrl: string }>>({})
 
 	useEffect(() => {
-		loadConfig()
+        if (!configContent) {
+		    loadConfig()
+        }
 	}, [isAuth])
 
     useEffect(() => {
@@ -76,11 +78,13 @@ export function ConfigPage() {
 	const loadConfig = async () => {
 		try {
 			setLoading(true)
-			const token = await getAuthToken()
-            if (!token) {
-                // Not authenticated, don't try to load
-                setLoading(false)
-                return
+            let token: string | undefined
+            try {
+                if (isAuth) {
+			        token = await getAuthToken()
+                }
+            } catch (e) {
+                console.warn('Failed to get auth token', e)
             }
 
 			const content = await readTextFileFromRepo(
@@ -363,21 +367,25 @@ export function ConfigPage() {
                             <button 
                                 className={`join-item btn btn-sm border-none ${mode === 'visual' ? 'btn-primary shadow-md' : 'btn-ghost text-base-content/60'}`}
                                 onClick={() => setMode('visual')}
-                                disabled={!isAuth}
                             >
                                 可视化
                             </button>
                             <button 
                                 className={`join-item btn btn-sm border-none ${mode === 'code' ? 'btn-primary shadow-md' : 'btn-ghost text-base-content/60'}`}
                                 onClick={() => setMode('code')}
-                                disabled={!isAuth}
                             >
                                 代码
                             </button>
                         </div>
-                        <button onClick={handleSave} disabled={saving || loading || !isAuth} className="btn btn-sm btn-primary px-6 shadow-lg shadow-primary/20">
-                            {saving ? '保存中...' : '保存配置'}
-                        </button>
+                        {!isAuth ? (
+                            <button onClick={handleImportKey} className="btn btn-sm btn-primary px-6 shadow-lg shadow-primary/20">
+                                导入配置密钥
+                            </button>
+                        ) : (
+                            <button onClick={handleSave} disabled={saving || loading} className="btn btn-sm btn-primary px-6 shadow-lg shadow-primary/20">
+                                {saving ? '保存中...' : '保存配置'}
+                            </button>
+                        )}
                     </div>
 				</div>
 
@@ -385,7 +393,7 @@ export function ConfigPage() {
 					<div className="flex h-64 items-center justify-center text-base-content/50">
                         <span className="loading loading-spinner loading-lg text-primary"></span>
                     </div>
-				) : !isAuth ? (
+				) : !isAuth && !configContent ? (
                     <div className="flex flex-col items-center justify-center h-full flex-1 p-12 text-center space-y-6">
                         <div className="w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">
                             <span className="text-4xl">🔒</span>
