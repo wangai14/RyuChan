@@ -174,7 +174,7 @@ export function ConfigPage() {
             const token = await getAuthToken()
             if (!token) throw new Error('未授权')
 
-            const toastId = toast.loading('正在初始化保存...')
+            const toastId = toast.loading('🚀 正在初始化保存...')
 
             let configToUpdate = parsedConfig ? JSON.parse(JSON.stringify(parsedConfig)) : null
             const treeItems: TreeItem[] = []
@@ -182,11 +182,11 @@ export function ConfigPage() {
             // 1. Process Images
             if (Object.keys(pendingImages).length > 0) {
                 const totalImages = Object.keys(pendingImages).length
-                toast.loading(`准备上传 ${totalImages} 张图片...`, { id: toastId })
+                toast.loading(`📤 准备上传 ${totalImages} 张图片...`, { id: toastId })
 
                 let idx = 1
                 for (const [target, { file }] of Object.entries(pendingImages)) {
-                    toast.loading(`正在处理第 ${idx}/${totalImages} 张图片: ${file.name}...`, { id: toastId })
+                    toast.loading(`📸 正在处理图片 (${idx}/${totalImages}): ${file.name}...`, { id: toastId })
                     const base64 = await fileToBase64NoPrefix(file)
                     const ext = file.name.split('.').pop() || 'png'
                     const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
@@ -249,28 +249,33 @@ export function ConfigPage() {
             const baseTreeSha = commit.tree.sha
 
             // Create new tree
-            toast.loading('正在创建文件树...', { id: toastId })
+            toast.loading('🌳 正在构建文件树...', { id: toastId })
             const { sha: newTreeSha } = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, baseTreeSha)
 
             // Create new commit
-            toast.loading('正在创建提交...', { id: toastId })
+            toast.loading('💾 正在创建提交...', { id: toastId })
             const { sha: newCommitSha } = await createCommit(
                 token,
                 GITHUB_CONFIG.OWNER,
                 GITHUB_CONFIG.REPO,
-                'update: config and images',
+                'chore(config): update site configuration',
                 newTreeSha,
                 [currentCommitSha]
             )
 
             // Update ref
-            toast.loading('正在更新分支...', { id: toastId })
+            toast.loading('🔄 正在同步远程分支...', { id: toastId })
             await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, refName, newCommitSha)
 
-            toast.success('配置已更新！请等待部署完成后刷新页面', { id: toastId })
+            toast.success('🎉 配置更新成功！', { 
+                id: toastId,
+                description: '更改已推送到仓库，GitHub Actions 将会自动重新部署。'
+            })
         } catch (error: any) {
             console.error(error)
-            toast.error('保存配置失败: ' + error.message)
+            toast.error('❌ 保存配置失败', {
+                description: error.message
+            })
         } finally {
             setSaving(false)
         }

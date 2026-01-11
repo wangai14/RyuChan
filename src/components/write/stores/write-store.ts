@@ -187,10 +187,12 @@ export const useWriteStore = create<WriteStore>((set, get) => ({
 				loading: false
 			})
 
-			toast.success('博客加载成功')
+			toast.success('📖 博客文章加载成功')
 		} catch (err: any) {
 			console.error('Failed to load blog:', err)
-			toast.error(err?.message || '加载博客失败')
+			toast.error('❌ 加载博客失败', {
+				description: err?.message
+			})
 			set({ loading: false })
 			throw err
 		}

@@ -25,14 +25,14 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
     // }
 
     const token = await getAuthToken()
-    const toastId = toast.loading('正在初始化发布...')
+    const toastId = toast.loading('🚀 正在初始化发布...')
 
     try {
-        toast.loading('正在获取分支信息...', { id: toastId })
+        toast.loading('📡 正在同步分支信息...', { id: toastId })
         const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
         const latestCommitSha = refData.sha
 
-        const commitMessage = mode === 'edit' ? `更新文章: ${form.slug}` : `新增文章: ${form.slug}`
+        const commitMessage = mode === 'edit' ? `feat(blog): update post "${form.title}"` : `feat(blog): publish post "${form.title}"`
 
         const allLocalImages: Array<{ img: Extract<ImageItem, { type: 'file' }>; id: string }> = []
 
@@ -55,10 +55,10 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
         const treeItems: TreeItem[] = []
 
         if (allLocalImages.length > 0) {
-            toast.loading(`共需上传 ${allLocalImages.length} 张图片...`, { id: toastId })
+            toast.loading(`📤 准备上传 ${allLocalImages.length} 张图片...`, { id: toastId })
             let idx = 1
             for (const { img, id } of allLocalImages) {
-                toast.loading(`正在上传第 ${idx++}/${allLocalImages.length} 张图片...`, { id: toastId })
+                toast.loading(`📸 正在上传图片 (${idx++}/${allLocalImages.length})...`, { id: toastId })
                 const hash = img.hash || (await hashFileSHA256(img.file))
                 const ext = getFileExt(img.file.name)
                 const filename = `${hash}${ext}`
@@ -104,7 +104,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
         }
         const finalContent = stringifyFrontmatter(frontmatter, mdToUpload)
 
-        toast.loading('正在上传文章内容...', { id: toastId })
+        toast.loading('📝 正在生成文章内容...', { id: toastId })
         const mdBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(finalContent), 'base64')
         treeItems.push({
             path: `src/content/blog/${form.slug}.md`,
@@ -113,19 +113,26 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
             sha: mdBlob.sha
         })
 
-        toast.loading('正在创建文件树...', { id: toastId })
+        toast.loading('🌳 正在构建文件树...', { id: toastId })
         const treeData = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, latestCommitSha)
 
-        toast.loading('正在创建提交...', { id: toastId })
+        toast.loading('💾 正在提交更改...', { id: toastId })
         const commitData = await createCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, commitMessage, treeData.sha, [latestCommitSha])
 
-        toast.loading('正在更新分支...', { id: toastId })
+        toast.loading('🔄 正在同步远程分支...', { id: toastId })
         await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
 
-        toast.success('发布成功！请等待部署完成后刷新页面', { id: toastId })
+        toast.success(`🎉 ${mode === 'edit' ? '更新' : '发布'}成功！更改已推送到仓库`, { 
+            id: toastId,
+            duration: 5000,
+            description: 'GitHub Actions 将会自动部署您的站点，请稍候。'
+        })
     } catch (error: any) {
         console.error(error)
-        toast.error(error.message || '发布失败', { id: toastId })
+        toast.error('❌ 操作失败', { 
+            id: toastId,
+            description: error.message || '发生了未知错误，请重试'
+        })
         throw error
     }
 }

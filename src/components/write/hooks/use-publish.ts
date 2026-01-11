@@ -20,11 +20,11 @@ export function usePublish() {
 
 	const onPublish = useCallback(async () => {
 		if (!form.title?.trim()) {
-			toast.error('请输入文章标题')
+			toast.warning('⚠️ 请输入文章标题')
 			return
 		}
 		if (!form.slug?.trim()) {
-			toast.error('请输入文章 Slug')
+			toast.warning('⚠️ 请输入文章 Slug (URL 路径)')
 			return
 		}
 
@@ -39,7 +39,7 @@ export function usePublish() {
 			})
 		} catch (err: any) {
 			console.error(err)
-			toast.error(err?.message || '操作失败')
+			// error is already toasted in pushBlog
 		} finally {
 			setLoading(false)
 		}
@@ -48,15 +48,20 @@ export function usePublish() {
 	const onDelete = useCallback(async () => {
 		const targetSlug = originalSlug || form.slug
 		if (!targetSlug) {
-			toast.error('缺少 slug，无法删除')
+			toast.error('❌ 缺少 Slug，无法删除')
 			return
 		}
 		try {
 			setLoading(true)
 			await deleteBlog(targetSlug)
+			toast.success('🗑️ 文章已成功删除', {
+				description: '更改已推送至 GitHub，请等待部署完成。'
+			})
 		} catch (err: any) {
 			console.error(err)
-			toast.error(err?.message || '删除失败')
+			toast.error('❌ 删除失败', {
+				description: err?.message
+			})
 		} finally {
 			setLoading(false)
 		}

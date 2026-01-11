@@ -42,10 +42,10 @@ export function WriteActions() {
 
 	const handleDelete = () => {
 		if (!isAuth) {
-			toast.info('请先导入密钥')
+			toast.info('🔑 请先导入私钥以进行操作')
 			return
 		}
-		const confirmMsg = form?.title ? `确定删除《${form.title}》吗？该操作不可恢复。` : '确定删除当前文章吗？该操作不可恢复。'
+		const confirmMsg = form?.title ? `⚠️ 确定删除《${form.title}》吗？该操作不可恢复。` : '⚠️ 确定删除当前文章吗？该操作不可恢复。'
 		if (window.confirm(confirmMsg)) {
 			onDelete()
 		}
@@ -59,7 +59,7 @@ export function WriteActions() {
 		const file = e.target.files?.[0]
 		if (!file) return
 
-		if (form.md && !window.confirm('确定导入 Markdown 文件吗？这将覆盖当前内容。')) {
+		if (form.md && !window.confirm('⚠️ 确定导入 Markdown 文件吗？这将覆盖当前编辑的内容。')) {
 			if (e.currentTarget) e.currentTarget.value = ''
 			return
 		}
@@ -67,9 +67,9 @@ export function WriteActions() {
 		try {
 			const text = await file.text()
 			updateForm({ md: text })
-			toast.success('已导入 Markdown 文件')
+			toast.success('📄 Markdown 文件导入成功')
 		} catch (error) {
-			toast.error('导入失败，请重试')
+			toast.error('❌ 导入失败，请重试')
 		} finally {
 			if (e.currentTarget) e.currentTarget.value = ''
 		}
