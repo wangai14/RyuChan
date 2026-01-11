@@ -784,9 +784,17 @@ const initialSong = musicList[0] || {};
                 if (activeLine) {
                     activeLine.className = 'lyric-line transition-all duration-500 py-1 cursor-pointer text-base font-bold tracking-wider lyric-active';
                     
-                    activeLine.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
+                    // Manual scroll calculation to prevent whole page scrolling
+                    const containerHeight = this.lyricsContainer.clientHeight;
+                    const lineTop = activeLine.offsetTop;
+                    const lineHeight = activeLine.clientHeight;
+                    
+                    // Calculate center position
+                    const scrollTarget = lineTop - (containerHeight / 2) + (lineHeight / 2);
+
+                    this.lyricsContainer.scrollTo({
+                        top: scrollTarget,
+                        behavior: 'smooth'
                     });
                 }
             }
