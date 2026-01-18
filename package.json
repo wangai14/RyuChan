@@ -11,7 +11,8 @@
     "search:clean": "rimraf public/pagefind",
     "search:index": "npm run build && cpy 'dist/pagefind/**' public/pagefind",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "deploy": "npx wrangler pages deploy dist --project-name ryuchan"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
