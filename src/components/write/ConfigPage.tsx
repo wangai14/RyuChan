@@ -42,6 +42,8 @@ const COMMENT_PROVIDERS = [
 
 export function ConfigPage() {
     const [configContent, setConfigContent] = useState('')
+    const [lastFetchedContent, setLastFetchedContent] = useState<string | null>(null)
+    const [isDirty, setIsDirty] = useState(false)
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [mode, setMode] = useState<'visual' | 'code'>('visual')
@@ -93,12 +95,18 @@ export function ConfigPage() {
                 GITHUB_CONFIG.BRANCH
             )
             if (content) {
-                setConfigContent(content)
-                try {
-                    setParsedConfig(yaml.load(content))
-                } catch (e) {
-                    console.error(e)
+                // 如果本地已有未保存的更改（isDirty），则不要覆盖用户当前编辑
+                if (isDirty) {
+                    toast.info('检测到本地未保存更改，已跳过远程配置覆盖')
+                } else {
+                    setConfigContent(content)
+                    try {
+                        setParsedConfig(yaml.load(content))
+                    } catch (e) {
+                        console.error(e)
+                    }
                 }
+                setLastFetchedContent(content)
             }
         } catch (error: any) {
             toast.error('加载配置失败: ' + error.message)
@@ -119,6 +127,7 @@ export function ConfigPage() {
         current[parts[parts.length - 1]] = value
         setParsedConfig(newConfig)
         setConfigContent(yaml.dump(newConfig))
+        setIsDirty(true)
     }
 
     const handleSocialChange = (index: number, field: string, value: any) => {
@@ -422,8 +431,8 @@ export function ConfigPage() {
                         {mode === 'code' ? (
                             <textarea
                                 className="h-[600px] w-full rounded-xl border border-base-300 bg-base-100 p-6 font-mono text-sm focus:border-primary focus:outline-none resize-none shadow-inner"
-                                value={configContent}
-                                onChange={(e) => setConfigContent(e.target.value)}
+                                    value={configContent}
+                                    onChange={(e) => { setConfigContent(e.target.value); setIsDirty(true) }}
                                 spellCheck={false}
                             />
                         ) : (
