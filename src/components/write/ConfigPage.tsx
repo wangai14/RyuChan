@@ -27,10 +27,10 @@ const SOCIAL_PRESETS = [
     { label: 'Email', value: 'ri:mail-line' },
     { label: 'Telegram', value: 'ri:telegram-line' },
     { label: 'QQ', value: 'ri:qq-line' },
-    { label: 'WeChat', value: 'ri:wechat-line' },
-    { label: 'Douyin', value: 'ri:douyin-line' },
+    { label: 'WeChat', value: 'ri:wechat-fill' },
+    { label: 'Douyin', value: 'ri:tiktok-line' },
     { label: 'RSS', value: 'ri:rss-fill' },
-    { label: 'Weibo', value: 'ri:weibo-line' },
+    { label: 'Weibo', value: 'ri-weibo-fill' },
     { label: 'Zhihu', value: 'ri:zhihu-line' },
     { label: 'Other', value: 'ri:link' }
 ]
